@@ -1,0 +1,19 @@
+{
+  "name": "statsbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "statsbot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hofftech/statsbot.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hofftech/statsbot/issues"
+  },
+  "homepage": "https://github.com/hofftech/statsbot#readme"
+}
