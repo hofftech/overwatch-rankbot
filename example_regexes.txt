@@ -1,0 +1,4 @@
+@statsbot#7636 setup
+@statsbot#7636 stop
+@statsbot#7636 confirm
+@statsbot#7636 track notajetski#1447
