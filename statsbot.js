@@ -85,7 +85,7 @@ mybot.on("message", function(message) {
 					// first, check to see if player ID is already in channel
 
 					if (channel.players.indexOf(player) >= 0) {
-						mybot.sendMessage(message, "I'm already tracking " + player + "in this channel, numbnuts!")
+						mybot.sendMessage(message, "I'm already tracking " + player + " in this channel, numbnuts!")
 					} else {
 						// if not, tack on the player to the channel, and save
 						channel.players.push(player)
@@ -163,6 +163,11 @@ var getPlayerRank = function(player_id, cb) {
 			cb(null, {
 				player: player_id,
 				rank: $(".competitive-rank").text()
+			})
+		} else {
+			cb(null, {
+				player: player_id,
+				rank: ""
 			})
 		}
 	})
