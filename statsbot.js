@@ -71,32 +71,35 @@ mybot.on("message", function(message) {
 			}
 		} else if (messageContents.indexOf("track") >= 0) {
 			re = messageContents.match(/@statsbot#7636 (\w*) (.*)/)
-			console.log(re);
-			var player = re[2];
-			// append player to list on channel
-			Channel.findOne({
-				where: {
-					channel_id: message.channel.id
-				}
-			}).then(function(channel) {
-				if (!channel) {
-					mybot.sendMessage(message, "Whoa, hold on there! You need to run `@statsbot setup` for this channel first.")
-				} else {
-					// first, check to see if player ID is already in channel
-
-					if (channel.players.indexOf(player) >= 0) {
-						mybot.sendMessage(message, "I'm already tracking " + player + " in this channel, numbnuts!")
-					} else {
-						// if not, tack on the player to the channel, and save
-						channel.players.push(player)
-						channel.update({
-							players: channel.players
-						}).then(function() {
-							mybot.sendMessage(message, "Done! I've added " + player + " to the list.")
-						})
+			if (!re) {
+				mybot.sendMessage(message, "Ya gotta specify something to track, numbnuts! Try something like `@statsbot track mybattletag#1234`");
+			} else {
+				var player = re[2];
+				// append player to list on channel
+				Channel.findOne({
+					where: {
+						channel_id: message.channel.id
 					}
-				}
-			})
+				}).then(function(channel) {
+					if (!channel) {
+						mybot.sendMessage(message, "Whoa, hold on there! You need to run `@statsbot setup` for this channel first.")
+					} else {
+						// first, check to see if player ID is already in channel
+
+						if (channel.players.indexOf(player) >= 0) {
+							mybot.sendMessage(message, "I'm already tracking " + player + " in this channel, numbnuts!")
+						} else {
+							// if not, tack on the player to the channel, and save
+							channel.players.push(player)
+							channel.update({
+								players: channel.players
+							}).then(function() {
+								mybot.sendMessage(message, "Done! I've added " + player + " to the list.")
+							})
+						}
+					}
+				})
+			}
 		} else if (messageContents.indexOf("remove") >= 0) {
 			re = messageContents.match(/@statsbot#7636 (\w*) (.*)/)
 			console.log(re);
