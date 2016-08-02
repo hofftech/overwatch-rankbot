@@ -70,11 +70,11 @@ mybot.on("message", function(message) {
 				mybot.sendMessage(message, "Er...what? What am I supposed to be confirming?")
 			}
 		} else if (messageContents.indexOf("track") >= 0) {
-			re = messageContents.match(/@statsbot#7636 (\w*) (.*)/)
+			re = messageContents.match(/(.*) (\w*) (.*)/)
 			if (!re) {
 				mybot.sendMessage(message, "Ya gotta specify something to track, numbnuts! Try something like `@statsbot track mybattletag#1234`");
 			} else {
-				var player = re[2];
+				var player = re[3];
 				// append player to list on channel
 				Channel.findOne({
 					where: {
@@ -171,6 +171,9 @@ var getPlayerRank = function(player_id, cb) {
 	request(ow_url, function(error, response, body) {
 		if (!error && response.statusCode == 200) {
 			$ = cheerio.load(body);
+			var competitiveTimePlayed = "0";
+			competitiveTimePlayed = $("td:contains('Time Played') ~ td", $("#competitive-play .career-stats-section .js-stats").slice(0, 1)).text()
+
 			var rankElements = $(".competitive-rank")
 			if (rankElements.length >= 1) {
 				var rank = rankElements.slice(0, 1).text()
@@ -179,26 +182,28 @@ var getPlayerRank = function(player_id, cb) {
 			}
 			cb(null, {
 				player: player_id,
-				rank: rank
+				rank: rank,
+				competitiveTimePlayed: competitiveTimePlayed
 			})
 		} else {
 			cb(null, {
 				player: player_id,
-				rank: ""
+				rank: "",
+				competitiveTimePlayed: ""
 			})
 		}
 	})
 }
 
 var postPlayerRanks = function(channel_id, player_ids) {
-	console.log("suppost to post ranks for", player_ids, "into", channel_id);
+	console.log("posting ranks for", player_ids, "into", channel_id);
 	async.map(player_ids, getPlayerRank, function(err, results) {
 		console.log(results);
 		results.sort(function(a, b) {
 			return b.rank - a.rank
 		})
 		strings = results.map(function(result) {
-			return leftPad(result.player, 20) + " | " + (result.rank ? result.rank : "Unranked :(")
+			return leftPad(result.player, 20) + " | " + leftPad((result.rank ? result.rank : "-"), 2) + " | " + (result.competitiveTimePlayed ? result.competitiveTimePlayed : "-")
 		})
 		mybot.sendMessage(channel_id, "**It's hiiiiigh noon.**\n\n```" + strings.join("\n") + "```")
 	})
