@@ -171,9 +171,15 @@ var getPlayerRank = function(player_id, cb) {
 	request(ow_url, function(error, response, body) {
 		if (!error && response.statusCode == 200) {
 			$ = cheerio.load(body);
+			var rankElements = $(".competitive-rank")
+			if (rankElements.length >= 1) {
+				var rank = rankElements.slice(0, 1).text()
+			} else {
+				rank = ""
+			}
 			cb(null, {
 				player: player_id,
-				rank: $(".competitive-rank").text()
+				rank: rank
 			})
 		} else {
 			cb(null, {
