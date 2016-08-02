@@ -30,7 +30,7 @@ var confirmationFlags = {}
 
 mybot.on("message", function(message) {
 	// should really convert all this shit over to regexes....
-	if (message.cleanContent.startsWith("@statsbot#7636")) {
+	if (message.cleanContent.startsWith("@statsbot#7636") || message.cleanContent.startsWith("@statsbot-dev#7142")) {
 		// hey! that's to statsbot!
 		messageContents = message.cleanContent
 		if (messageContents.indexOf("setup") >= 0) {
@@ -139,8 +139,16 @@ mybot.on("message", function(message) {
 					mybot.sendMessage(message, "I'm currently posting daily ranks for these players in this channel:\n\n" + channel.players.join("\n"))
 				}
 			})
+		} else if (messageContents.indexOf("post") >= 0) {
+			Channel.findOne({
+				where: {
+					channel_id: message.channel.id
+				}
+			}).then(function(channel) {
+				postPlayerRanks(channel.dataValues.channel_id, channel.dataValues.players)
+			})
 		} else {
-			commands = ["@statsbot setup", "statsbot track battlenetid#1234", "statsbot remove battlenetid#1234", "@statsbot stop"]
+			commands = ["@statsbot setup", "@statsbot post", "@statsbot track battlenetid#1234", "@statsbot remove battlenetid#1234", "@statsbot stop"]
 			mybot.sendMessage(message, "Er...what? Didn't quite get that. Try one of these commands:\n\n" + commands.join("\n"))
 			delete confirmationFlags[message.channel.id]
 		}
