@@ -4,6 +4,18 @@ It's hiiiiigh noon.
 
 [Add statsbot to your Discord server here!](https://discordapp.com/oauth2/authorize?client_id=200377900413747201&scope=bot&permissions=3072)
 
+## Statsbot commands
+
+```
+@statsbot#7636 setup
+@statsbot#7636 track battletag#1234
+@statsbot#7636 track battletag#1234 anotherbattletag#1234
+@statsbot#7636 post
+@statsbot#7636 list
+@statsbot#7636 remove battletag#1234
+@statsbot#7636 remove battletag#1234 anotherbattletag#1234
+@statsbot#7636 stop
+```
 
 ## Deploy
 
