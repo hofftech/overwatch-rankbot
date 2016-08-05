@@ -1,11 +1,16 @@
+var Discord = require("discord.js");
+var cheerio = require("cheerio");
+var mybot = new Discord.Client();
+var request = require("request");
+var CronJob = require("cron").CronJob;
+var async = require("async");
+var leftPad = require("left-pad"); // just cuz
+var Sequelize = require("sequelize");
+
 if (process.env.NODE_ENV != "production") {
 	require("dotenv").config();
 }
 
-var async = require("async");
-var leftPad = require("left-pad"); // just cuz
-
-var Sequelize = require("sequelize");
 var sequelize = new Sequelize(process.env.POSTGRES_URL, {
 	dialectOptions: {
 		ssl: true
@@ -15,24 +20,11 @@ var sequelize = new Sequelize(process.env.POSTGRES_URL, {
 var Channel = sequelize.define("channels", {
 	channel_id: Sequelize.BIGINT
 });
-// when a player is added to a channel, make sure a Channel exists
-// when posting ranks, just look up all channels, and post players for each one
-// if no players exist for a channel, don't post ranks
-
 
 var TrackedPlayer = sequelize.define("tracked_players", {
 	player_battletag: Sequelize.STRING,
 	channel_id: Sequelize.BIGINT
 });
-
-// Channel.sync()
-
-var Discord = require("discord.js");
-var cheerio = require("cheerio");
-var mybot = new Discord.Client();
-var request = require("request");
-var CronJob = require("cron").CronJob;
-
 
 var confirmationFlags = {};
 
@@ -94,22 +86,6 @@ mybot.on("message", function(message) {
 	}
 });
 
-TrackedPlayer.sync().then(function() {
-	Channel.sync().then(function() {
-		console.log("Logging into Discord..."); // eslint-disable-line no-console
-		mybot.loginWithToken(process.env.DISCORD_KEY, function(err) {
-			if (err) {
-				console.log(err); // eslint-disable-line no-console
-			} else {
-				console.log("Successfully logged in to Discord."); // eslint-disable-line no-console
-				// postRanks();
-			}
-		});
-	});
-});
-
-
-mybot.autoReconnect = true;
 
 var stopPostingToChannel = function(channel_id, message) {
 	let me = "@" + message.client.user.username + "#" + message.client.user.discriminator;
@@ -281,3 +257,22 @@ var postRanks = function() {
 new CronJob("0 0 12 * * *", postRanks, function() {},
 	true, "America/Denver"
 );
+
+TrackedPlayer.sync().then(function() {
+	Channel.sync().then(function() {
+		console.log("Logging into Discord..."); // eslint-disable-line no-console
+		mybot.loginWithToken(process.env.DISCORD_KEY, function(err) {
+			if (err) {
+				console.log(err); // eslint-disable-line no-console
+			} else {
+				console.log("Successfully logged in to Discord."); // eslint-disable-line no-console
+				// postRanks();
+			}
+		});
+	});
+});
+
+mybot.autoReconnect = true;
+mybot.on("disconnected", function(err) {
+	throw "Disconnected! " + err;
+});
