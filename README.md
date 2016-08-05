@@ -12,8 +12,8 @@ It's hiiiiigh noon.
 @statsbot#7636 track battletag#1234 anotherbattletag#1234
 @statsbot#7636 post
 @statsbot#7636 list
-@statsbot#7636 remove battletag#1234
-@statsbot#7636 remove battletag#1234 anotherbattletag#1234
+@statsbot#7636 untrack battletag#1234
+@statsbot#7636 untrack battletag#1234 anotherbattletag#1234
 @statsbot#7636 stop
 ```
 

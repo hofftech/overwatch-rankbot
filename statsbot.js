@@ -39,7 +39,7 @@ mybot.on("message", function(message) {
 		toMe = false;
 	}
 
-	let helpCommands = ["@statsbot post", "@statsbot track battlenetid#1234", "@statsbot remove battlenetid#1234", "@statsbot stop"];
+	let helpCommands = ["setup", "track battletag#1234", "track battletag#1234 anotherbattletag#1234", "post", "list", "untrack battletag#1234", "untrack battletag#1234 anotherbattletag#1234", "stop"];
 
 	if (toMe) {
 		let command = messageRegex[1];
@@ -80,7 +80,7 @@ mybot.on("message", function(message) {
 				postToChannel(message.channel.id, message);
 				break;
 			default:
-				mybot.sendMessage(message, "Er...what? Didn't quite get that. Try one of these commands:\n\n" + helpCommands.join("\n"));
+				mybot.sendMessage(message, "Er...what? Didn't quite get that. Try one of these commands:\n\n```" + helpCommands.join("\n" + me + " ") + "```");
 				delete confirmationFlags[message.channel.id];
 		}
 	}
