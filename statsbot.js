@@ -18,7 +18,10 @@ var sequelize = new Sequelize(process.env.POSTGRES_URL, {
 });
 
 var Channel = sequelize.define("channels", {
-	channel_id: Sequelize.BIGINT
+	channel_id: {
+		type: Sequelize.BIGINT,
+		primaryKey: true
+	}
 });
 
 var TrackedPlayer = sequelize.define("tracked_players", {
@@ -58,9 +61,9 @@ mybot.on("message", function(message) {
 				if (playersToTrack.length == 0) {
 					mybot.sendMessage(message, "Ya gotta specify someone to track, numbnuts! Try something like `@statsbot track battletag#1234`");
 				} else {
-					for (let player of playersToTrack) {
-						startTrackingPlayer(message.channel.id, player, message);
-					}
+					async.eachSeries(playersToTrack, function(player, cb) {
+						startTrackingPlayer(message.channel.id, player, message, cb);
+					});
 				}
 				break;
 			case "untrack":
@@ -107,7 +110,6 @@ var confirm = function(channel_id, message) {
 			for (let trackedPlayer of trackedPlayersInThisChannel) {
 				trackedPlayer.destroy();
 			}
-
 			mybot.sendMessage(message, "Alright, I've stopped tracking all players in this channel.");
 		});
 	} else {
@@ -115,7 +117,7 @@ var confirm = function(channel_id, message) {
 	}
 };
 
-var startTrackingPlayer = function(channel_id, player_battletag, message) {
+var startTrackingPlayer = function(channel_id, player_battletag, message, cb) {
 	let me = "@" + message.client.user.username + "#" + message.client.user.discriminator;
 	TrackedPlayer.find({
 		where: {
@@ -125,19 +127,32 @@ var startTrackingPlayer = function(channel_id, player_battletag, message) {
 	}).then(function(player) {
 		if (player) {
 			mybot.sendMessage(message, "I'm already tracking " + player_battletag + " in this channel, numbnuts!\n\nIf you want me to stop tracking them, try:\n\n`" + me + " untrack " + player_battletag + "`");
+			cb();
 		} else {
-			TrackedPlayer.create({
-				channel_id: channel_id,
-				player_battletag: player_battletag
-			}).then(function() {
-				// ensure channel exists
-				Channel.findOrCreate({
-					where: {
-						channel_id: channel_id
-					}
-				}).then(function() {
-					mybot.sendMessage(message, "Done! I've started tracking " + player_battletag + " in this channel.");
-				});
+			getPlayerRank(player_battletag, function(err, player_stats) {
+				if (err) {
+					mybot.sendMessage(message, "Hmm...got some kind of error while trying to track " + player_battletag + " in this channel. Try again, and if that doesn't fix it, let us know about the bug! https://github.com/hofftech/statsbot/issues");
+					cb();
+				} else if (!("rank" in player_stats) || (!player_stats.rank) || (player_stats.rank == "")) {
+					mybot.sendMessage(message, "Hm, I can't find a rank for " + player_battletag + " at " + "https://playoverwatch.com/en-us/career/pc/us/" + player_battletag.split("#")[0] + "-" + player_battletag.split("#")[1] + " ! Either \"" + player_battletag + "\" doesn't exist in Overwatch, or they just haven't played enough games to be ranked yet.");
+					cb();
+				} else {
+					TrackedPlayer.create({
+						channel_id: channel_id,
+						player_battletag: player_battletag
+					}).then(function() {
+						// ensure channel exists
+						// this is where the problem is - if we add 5 players at once, then we add 5 channels at once
+						Channel.findOrCreate({
+							where: {
+								channel_id: channel_id
+							}
+						}).then(function() {
+							mybot.sendMessage(message, "Done! I've started tracking " + player_battletag + " in this channel.");
+							cb();
+						});
+					});
+				}
 			});
 		}
 	});
