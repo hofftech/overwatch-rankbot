@@ -47,8 +47,6 @@ mybot.on("message", function(message) {
 	if (toMe) {
 		let command = messageRegex[1];
 
-		// TODO: check and see if the channel has been set up
-
 		switch (command) {
 			case "stop":
 				stopPostingToChannel(message.channel.id, message);
@@ -59,7 +57,7 @@ mybot.on("message", function(message) {
 			case "track":
 				let playersToTrack = messageRegex.slice(2);
 				if (playersToTrack.length == 0) {
-					mybot.sendMessage(message, "Ya gotta specify someone to track, numbnuts! Try something like `@statsbot track battletag#1234`");
+					mybot.sendMessage(message, "Ya gotta specify someone to track, numbnuts! Try something like `" + me + " track battletag#1234`");
 				} else {
 					async.eachSeries(playersToTrack, function(player, cb) {
 						startTrackingPlayer(message.channel.id, player, message, cb);
@@ -69,7 +67,7 @@ mybot.on("message", function(message) {
 			case "untrack":
 				let playersToRemove = messageRegex.slice(2);
 				if (playersToRemove.length == 0) {
-					mybot.sendMessage(message, "Ya gotta specify someone to untrack, numbnuts! Try something like `@statsbot untrack battletag#1234`");
+					mybot.sendMessage(message, "Ya gotta specify someone to untrack, numbnuts! Try something like `" + me + " untrack battletag#1234`");
 				} else {
 					for (let player of playersToRemove) {
 						stopTrackingPlayer(message.channel.id, player, message);
