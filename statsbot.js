@@ -36,7 +36,7 @@ mybot.on("message", function(message) {
 	let messageRegex = messageContents.match(/([\w@#-]+)+/gm);
 	let me = "@" + message.client.user.username + "#" + message.client.user.discriminator;
 	let toMe;
-	if (messageRegex[0] == me) {
+	if (messageRegex && messageRegex[0] == me) {
 		toMe = true;
 	} else {
 		toMe = false;
@@ -276,7 +276,7 @@ TrackedPlayer.sync().then(function() {
 		console.log("Logging into Discord..."); // eslint-disable-line no-console
 		mybot.loginWithToken(process.env.DISCORD_KEY, function(err) {
 			if (err) {
-				console.log(err); // eslint-disable-line no-console
+				throw err;
 			} else {
 				console.log("Successfully logged in to Discord."); // eslint-disable-line no-console
 				// postRanks();
