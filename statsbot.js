@@ -1,5 +1,4 @@
 var Discord = require("discord.js");
-var cheerio = require("cheerio");
 var mybot = new Discord.Client();
 var request = require("request");
 var CronJob = require("cron").CronJob;
@@ -208,33 +207,54 @@ var postToChannel = function(channel_id) {
 };
 
 var getPlayerRank = function(player_id, cb) {
-	var ow_url = "https://playoverwatch.com/en-us/career/pc/us/" + player_id.split("#")[0] + "-" + player_id.split("#")[1];
-	request(ow_url, function(error, response, body) {
+	request("http://overwatch-stats-api.com/players/" + encodeURIComponent(player_id), function(error, response, body) {
 		if (!error && response.statusCode == 200) {
-			let $ = cheerio.load(body);
-			var competitiveTimePlayed = "0";
-			competitiveTimePlayed = $("td:contains('Time Played') ~ td", $("#competitive-play .career-stats-section .js-stats").slice(0, 1)).text();
-
-			var rankElements = $(".competitive-rank");
-			if (rankElements.length >= 1) {
-				var rank = rankElements.slice(0, 1).text();
+			body = JSON.parse(body);
+			if ("rank" in body) {
+				cb(null, {
+					player: player_id,
+					rank: body.rank
+				});
 			} else {
-				rank = "";
+				cb(null, {
+					player: player_id,
+					rank: ""
+				});
 			}
-			cb(null, {
-				player: player_id,
-				rank: rank,
-				competitiveTimePlayed: competitiveTimePlayed
-			});
 		} else {
 			cb(null, {
 				player: player_id,
-				rank: "",
-				competitiveTimePlayed: ""
+				rank: ""
 			});
 		}
 	});
 };
+// var ow_url = "https://playoverwatch.com/en-us/career/pc/us/" + player_id.split("#")[0] + "-" + player_id.split("#")[1];
+// request(ow_url, function(error, response, body) {
+// 	if (!error && response.statusCode == 200) {
+// 		let $ = cheerio.load(body);
+// 		var competitiveTimePlayed = "0";
+// 		competitiveTimePlayed = $("td:contains('Time Played') ~ td", $("#competitive-play .career-stats-section .js-stats").slice(0, 1)).text();
+//
+// 		var rankElements = $(".competitive-rank");
+// 		if (rankElements.length >= 1) {
+// 			var rank = rankElements.slice(0, 1).text();
+// 		} else {
+// 			rank = "";
+// 		}
+// 		cb(null, {
+// 			player: player_id,
+// 			rank: rank,
+// 			competitiveTimePlayed: competitiveTimePlayed
+// 		});
+// 	} else {
+// 		cb(null, {
+// 			player: player_id,
+// 			rank: "",
+// 			competitiveTimePlayed: ""
+// 		});
+// 	}
+// });
 
 var postPlayerRanks = function(channel_id, player_ids) {
 	async.map(player_ids, getPlayerRank, function(err, results) {
