@@ -5,6 +5,7 @@ var CronJob = require("cron").CronJob;
 var async = require("async");
 var leftPad = require("left-pad"); // just cuz
 var Sequelize = require("sequelize");
+const moment = require("moment");
 
 if (process.env.NODE_ENV != "production") {
 	require("dotenv").config();
@@ -210,17 +211,21 @@ var getPlayerRank = function(player_id, cb) {
 	request("https://overwatch-stats-api.com/players/" + encodeURIComponent(player_id), function(error, response, body) {
 		if (!error && response.statusCode == 200) {
 			body = JSON.parse(body);
-			if ("rank" in body) {
-				cb(null, {
-					player: player_id,
-					rank: body.rank
-				});
-			} else {
-				cb(null, {
-					player: player_id,
-					rank: ""
-				});
-			}
+			calculateLastTimePlayed(body, function(lastTimePlayed) {
+				if ("rank" in body) {
+					cb(null, {
+						player: player_id,
+						rank: body.rank,
+						lastPlayedCompetitive: humanizeLastTimePlayed(lastTimePlayed)
+					});
+				} else {
+					cb(null, {
+						player: player_id,
+						rank: "",
+						lastPlayedCompetitive: humanizeLastTimePlayed(lastTimePlayed)
+					});
+				}
+			});
 		} else {
 			cb(null, {
 				player: player_id,
@@ -230,16 +235,41 @@ var getPlayerRank = function(player_id, cb) {
 	});
 };
 
+
+// returns the last time that a player has played, in milliseconds since epoch
+var calculateLastTimePlayed = function(player_data, cb) {
+	if (player_data.history.length == 0) {
+		return cb(null, moment(player_data.timestamp).valueOf());
+	}
+	if (player_data.history.length == 1) {
+		return cb(null, moment(player_data.history[0].timestamp).valueOf());
+	}
+	var mostRecentRank = player_data.rank;
+	for (var i = 0; i < player_data.history.length; i++) {
+		if (player_data.history[i].rank != mostRecentRank) {
+			let lastTimePlayed = player_data.history[i - 1].timestamp;
+			let converted = moment(lastTimePlayed).valueOf();
+			return cb(converted);
+		}
+	}
+	return cb(moment(player_data.history[player_data.history.length - 1].timestamp).valueOf());
+};
+
+// takes the last time played (in milliseconds since epoch) and returns a string with # of days ago
+var humanizeLastTimePlayed = function(lastTimePlayed) {
+	var duration = moment(new Date()).valueOf() - moment(lastTimePlayed).valueOf();
+	return "about " + moment.duration(duration).humanize() + " ago";
+};
+
 var postPlayerRanks = function(channel_id, player_ids) {
 	async.map(player_ids, getPlayerRank, function(err, results) {
 		results.sort(function(a, b) {
 			return b.rank - a.rank;
 		});
 		let strings = results.map(function(result) {
-			return leftPad(result.player, 20) + " | " + leftPad((result.rank ? result.rank : "-"), 2);
-			//  + " | " + (result.competitiveTimePlayed ? result.competitiveTimePlayed : "-")
+			return leftPad(result.player, 20) + " | " + leftPad((result.rank ? result.rank : "-"), 2) + " | " + (result.lastPlayedCompetitive ? result.lastPlayedCompetitive : "-");
 		});
-		mybot.sendMessage(channel_id, "**It's hiiiiigh noon.**\n\n```" + strings.join("\n") + "```");
+		mybot.sendMessage(channel_id, "**It's hiiiiigh noon.**\n\n```" + leftPad("Player", 20) + " | Rank | Last Played (Competitive)" + "\n" + "-------------------- | ---- | -------------------------" + "\n" + strings.join("\n") + "```");
 	});
 };
 
