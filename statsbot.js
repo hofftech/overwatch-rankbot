@@ -258,7 +258,11 @@ var calculateLastTimePlayed = function(player_data, cb) {
 // takes the last time played (in milliseconds since epoch) and returns a string with # of days ago
 var humanizeLastTimePlayed = function(lastTimePlayed) {
 	var duration = moment(new Date()).valueOf() - moment(lastTimePlayed).valueOf();
-	return "about " + moment.duration(duration).humanize() + " ago";
+	if (duration < moment.duration(1, "day").valueOf()) {
+		return "less than 24 hours ago";
+	} else {
+		return moment.duration(duration).humanize() + " ago";
+	}
 };
 
 var postPlayerRanks = function(channel_id, player_ids) {
